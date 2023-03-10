@@ -1,0 +1,57 @@
+/* 1. Display last name, job title of employees who have commission percentage and belongs to
+department 30.*/
+
+SELECT e.last_name, j.job_title, e.department_id, e.commission_pct
+    FROM hr.employees e
+    LEFT JOIN hr.jobs j
+        ON (e.job_id = j.job_id)
+    WHERE e.commission_pct IS NOT NULL AND 
+    department_id = 30
+
+/* 2. Display department name, manager name, and salary of the manager for all managers whose
+experience is more than 5 years.*/
+
+SELECT DISTINCT d.manager_id, d.department_name, e.first_name AS Manager_name, e.salary
+FROM hr.employees e
+LEFT JOIN hr.departments d
+    ON e.department_id = d.department_id
+WHERE (EXTRACT(YEAR FROM sysdate) - EXTRACT(YEAR FROM e.hire_date)) > 5
+
+/* 3. Display employee name if the employee joined before his manager.*/
+
+SELECT e.first_name
+FROM hr.employees e
+LEFT JOIN hr.employees m
+    ON (e.employee_id = m.manager_id)
+WHERE m.employee_id IS NOT NULL AND 
+WHERE e.hire_date < m.hire_date
+
+/* 4. Display employee name, job title for the jobs, employee did in the past where the job was
+done less than six months.*/
+SELECT first_name, j.job_title
+FROM hr.employees e
+LEFT JOIN hr.job_history jh 
+    ON e.employee_id = jh.employee_id
+LEFT JOIN hr.jobs j 
+    ON e.job_id = j.job_id
+WHERE MONTHS_BETWEEN(END_DATE, START_DATE) < 6
+/* 5. Display department name, average salary and number of employees with commission within
+the department.*/
+
+SELECT d.department_name, ROUND(AVG(e.salary), 2), COUNT(e.employee_id)
+FROM hr.departments d
+LEFT JOIN hr.employees e
+    ON d.department_id = e.department_id
+WHERE e.commission_pct IS NOT NULL
+GROUP  BY d.department_name
+
+/* 6. Display employee name and country in which he is working.*/
+
+SELECT DISTINCT employee_id, first_name, c.country_name
+FROM hr.employees e
+LEFT JOIN hr.departments d
+    ON e.department_id = d.department_id
+LEFT JOIN hr.locations l
+    ON d.location_id = d.location_id
+LEFT JOIN hr.countries c
+    ON c.country_id = l.country_id
