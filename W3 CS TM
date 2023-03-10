@@ -1,0 +1,126 @@
+/* 1. Display the first promotion year for each employee.*/
+Hər bir işçi üçün ilk vəzifə qalxımı olan ili göstərin. 
+SELECT employee_id, min(end_date)
+FROM hr.job_history jh
+group by employee_id
+having count(*)>1
+
+/* 2. Display location, city and department name of employees who have been promoted more than once.*/
+SELECT first_name||' '||last_name,
+       emp.employee_id,
+       dep.department_name,
+       loc.location_id,
+       city
+FROM hr.job_history jh
+LEFT JOIN hr.employees emp ON emp.employee_id=jh.employee_id
+LEFT JOIN hr.departments dep ON dep.department_id=emp.department_id
+LEFT JOIN hr.locations loc ON loc.location_id=dep.location_id
+GROUP BY by first_name,last_name,
+       emp.employee_id,
+       dep.department_name,
+       loc.location_id,
+       city
+HAVING COUNT(*)>2
+
+/* 3. Display minimum and maximum “hire_date” of employees work in IT and HR departments.
+IT və HR departamentdə ilk və ən son hansı tarixlərdə işçi qəbul edildiyini göstərin.*/
+
+SELECT MIN(emp.hire_date), MAX(emp.hire_date), dep.department_name
+FROM hr.employees emp
+LEFT JOIN hr.departments dep USING (department_id)
+WHERE dep.department_name IN ('IT', 'Human Resources')
+GROUP BY department_name
+
+
+/* 4. Find difference between current date and hire dates of employees after sorting them by hire date, then show difference in days, months and years.*/
+
+SELECT employee_id,
+       first_name||' '||last_name,
+       hire_date,
+       sysdate,
+       ROUND(sysdate - hire_date) days_diff, 
+        ROUND(MONTHS_BETWEEN(sysdate, hire_date)) months_diff,
+        EXTRACT(YEAR FROM sysdate) - EXTRACT(YEAR FROM hire_date) years_diff
+ FROM hr.employees e
+ ORDER BY hire_date
+
+/* 5. Find which departments used to hire earliest/latest.*/
+
+SELECT distinct e.department_id, e.hire_date
+FROM hr.employees e
+WHERE e.hire_date = 
+    (SELECT MAX(hire_date) from hr.employees) or
+    e.hire_date=(SELECT MIN(hire_date) from hr.employees);
+
+
+SELECT DISTINCT e.department_id, e.hire_date
+FROM hr.employees e
+WHERE e.hire_date = 
+    (SELECT MAX(hire_date) from hr.employees)
+UNION
+SELECT  e.department_id, e.hire_date
+FROM hr.employees e
+WHERE e.hire_date = 
+    (SELECT MIN(hire_date) from hr.employees);
+
+/* 6. Find the number of departments with no employee for each city.*/
+
+
+SELECT city,
+       count(distinct department_name)
+FROM (SELECT dep.department_name,
+       city,
+       count(distinct emp.employee_id)
+FROM hr.employees emp
+right JOIN hr.departments dep on dep.department_id=emp.department_id
+left join hr.locations loc on dep.location_id=loc.location_id
+group by dep.department_name, city
+having count(distinct emp.employee_id)=0 )
+group by city
+
+
+
+SELECT COUNT(department_id), city
+FROM (
+ SELECT DISTINCT d.department_id, l.city
+ FROM hr.departments d
+ LEFT JOIN hr.locations l ON d.location_id = l.location_id
+MINUS 
+ SELECT DISTINCT e.department_id, l.city
+ FROM hr.employees e
+ LEFT JOIN hr.departments d ON e.department_id = d.department_id
+ LEFT JOIN hr.locations l ON d.location_id = l.location_id
+)
+GROUP BY city;
+
+/* 7. Create a category called “seasons” and find in which season most employees were hired.*/
+SELECT CASE 
+        WHEN EXTRACT (MONTH FROM hire_date) in (12,1,2)
+        THEN 'WINTER'
+        WHEN EXTRACT (MONTH FROM hire_date) in (3,4,5)
+        THEN 'SPRING'
+        WHEN EXTRACT (MONTH FROM hire_date) in (6,7,8)
+        THEN 'SUMMER'
+        WHEN EXTRACT (MONTH FROM hire_date) in (9,10,11) then 'AUTUMN' 
+        else 'N/A'
+    END as seasons,
+    COUNT (distinct employee_id)
+FROM hr.employees
+GROUP BY CASE 
+        WHEN EXTRACT (MONTH FROM hire_date) in (12,1,2)
+        THEN 'WINTER'
+        WHEN EXTRACT (MONTH FROM hire_date) in (3,4,5)
+        THEN 'SPRING'
+        WHEN EXTRACT (MONTH FROM hire_date) in (6,7,8)
+        THEN 'SUMMER'
+        WHEN EXTRACT (MONTH FROM hire_date) in (9,10,11) then 'AUTUMN' else 'N/A'
+    END
+
+/* 8. Find the cities of employees with average salary more than 5000.*/
+
+SELECT ROUND(AVG(e.salary), 2) avg_salary, l.city
+FROM hr.employees e
+LEFT JOIN hr.departments d ON d.department_id = e.department_id
+LEFT JOIN hr.locations l ON l.location_id = d.location_id
+GROUP BY l.city
+HAVING AVG(salary) >5000
