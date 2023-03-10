@@ -1,0 +1,111 @@
+/* 1. Show minimum, average and maximum salary in last 15 years according to job id. */
+
+SELECT MIN(salary), ROUND(AVG(salary), 2), MAX(salary), job_id
+FROM hr.employees
+WHERE EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM hire_date) <=15
+GROUP BY job_id
+;
+
+/* 2. How many employees hired after 2005 for each department? */
+
+SELECT COUNT(employee_id), department_id
+FROM hr.employees
+WHERE EXTRACT(YEAR FROM hire_date) > 2005
+GROUP BY department_id;
+
+/* 3. Write a query to show departments in which the difference between maximum and minimum
+salary is greater than 5000. */
+
+SELECT department_id, MAX(salary), MIN(salary)
+FROM hr.employees
+GROUP BY department_id
+HAVING MAX(salary) - MIN(salary) > 5000
+ORDER BY department_id;
+
+/* 4. (The Question has a problem)Display the total salaries of employees who has not commission pct according to departments
+(without using where). */
+
+SELECT SUM(nvl2(commission_pct,0, salary)), department_id
+FROM hr.employees
+GROUP BY department_id
+HAVING SUM(nvl2(commission_pct,0, salary)) >0
+ORDER BY department_id   
+
+SELECT SUM(salary), department_id
+    FROM (SELECT nvl2(commission_pct,0, salary) as salary, department_id
+            FROM hr.employees)
+    GROUP BY department_id
+    HAVING SUM(salary) >0
+    ORDER BY department_id
+
+SELECT department_id, 
+        SUM(CASE WHEN
+        commission_pct is NULL
+        THEN salary
+        ELSE 0
+        END 
+        )AS SLS
+FROM HR.EMPLOYEES
+GROUP BY department_id
+HAVING SUM(CASE WHEN
+        commission_pct is NULL
+        THEN salary
+        ELSE 0
+        END 
+        )>0;
+
+/* 5. How many people has job id with average salary between 3000 and 7000?  */
+    SELECT SUM(counts)
+    FROM (SELECT COUNT(employee_id) AS counts
+            FROM hr.employees
+            GROUP BY job_id
+            HAVING AVG(salary) BETWEEN 3000 AND 7000);
+
+/* 6. Find number of employees with same name. */
+SELECT SUM(counts)
+FROM (SELECT COUNT(first_name) AS counts
+        FROM hr.employees
+        GROUP BY first_name
+        HAVING COUNT(first_name) >1)
+;
+
+/* 7. How many people with the same phone code work in departments 50 and 90? */
+
+SELECT COUNT(employee_id), SUBSTR(phone_number, 1, 3) as phone_code
+FROM hr.employees
+WHERE department_id IN (50,90)
+GROUP BY SUBSTR(phone_number, 1, 3)
+HAVING COUNT(employee_id) >1;
+
+
+/* 8. (smth is wrong with this question) Display departments with average number of employees more than 5 in spring and autumn. */
+SELECT department_id, counts
+        FROM (SELECT COUNT(DISTINCT employee_id) counts, department_id
+                FROM hr.employees
+                WHERE EXTRACT(MONTH FROM hire_date) IN (3,4,5,9,10,11) 
+                 GROUP BY department_id)
+        WHERE counts > 5;
+
+SELECT DEPARTMENT_ID
+FROM HR.EMPLOYEES
+WHERE EXTRACT(month from hire_date) IN (3,4,5) or
+      EXTRACT(MONTH FROM HIRE_DATE) IN (9,10,11)
+GROUP BY department_id
+HAVING count(distinct employee_id)>5;
+
+
+
+/* 9. How many employees work in departments which has maximum salary more than 5000? */
+
+SELECT COUNT(DISTINCT employee_id), department_id
+FROM hr.employees
+GROUP BY department_id
+HAVING MAX(salary) >5000;
+
+/* 10.Change second letter of employees’ names with the last letter and display. */
+SELECT first_name, REPLACE(first_name, SUBSTR(first_name, 2,1), SUBSTR(first_name, -1,1))
+FROM hr.employees
+
+SELECT FIRST_NAME,
+       SUBSTR(FIRST_NAME,1,1)||SUBSTR(FIRST_NAME,-1,1)||SUBSTR(FIRST_NAME,3,LENGTH(FIRST_NAME)-3)||SUBSTR(FIRST_NAME,2,1)
+FROM HR.EMPLOYEES;E_ID)
