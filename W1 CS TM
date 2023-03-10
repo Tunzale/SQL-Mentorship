@@ -1,0 +1,127 @@
+/* 1. Write a query in SQL to display job Title, the difference between minimum and maximum salaries
+for those jobs which max salary within the range 12000 to 18000.
+*/
+SELECT * FROM hr.employees;
+
+SELECT Job_title, max_salary - min_salary AS salary_difference
+FROM hr.jobs
+WHERE max_salary BETWEEN 12000 AND 18000;
+
+/*2.  Display the details of the employees who have no commission percentage and whose salary is
+within the range 7000 to 12000 for those employees who are not working in the departments
+50,30 and 80.*/
+
+SELECT *
+FROM hr.employees
+WHERE commission_pct IS NULL AND
+        salary BETWEEN 7000 AND 12000 AND
+        department_id NOT IN (50, 30, 80);
+        
+/*3. Write a query in SQL to display the full name (first name and last name), hire date, commission
+percentage, email and telephone separated by '-', and salary for those employees whose salary
+is above 11000 and make the result set in a descending order by the full name.*/
+
+SELECT first_name||' '||last_name AS full_name, 
+	hire_date, 
+	commission_pct, 
+	email|| '-'||phone_number AS contact,
+	salary
+FROM hr.employees
+WHERE salary >11000
+ORDER BY full_name DESC;
+
+/* 4. Write a query in SQL to display the first and last name, and salary for those employees whose first
+name is ending with the letter “m” and they have been hired before June 5th, 2010.*/
+
+SELECT first_name, last_name, salary 
+FROM hr.employees
+WHERE first_name LIKE '%m' AND
+hire_date < to_date('05-JUN-10', 'DD-MON-YY');
+
+
+/* 5. Display the full name (first and last), the phone number and email separated by hyphen, and
+salary, for those employees whose salary is not within the range of 9000 and 17000 and
+commission is not null. The column headings assign with Full_Name, Contact _Details and
+Remuneration respectively.*/
+
+SELECT first_name||' ' || last_name AS Full_name,
+        email|| '-' ||phone_number AS contact_details, 
+        salary remuneration 
+FROM hr.employees
+WHERE salary NOT BETWEEN 9000 AND 17000 AND
+            commission_pct IS NOT NULL;
+
+/* 6. Write a query in SQL to display all the information about the department Marketing.*/
+
+SELECT *
+FROM hr.departments
+WHERE UPPER(Department_name) ='MARKETNG'
+
+SELECT *
+FROM hr.departments
+WHERE department_id =20
+
+/* 7. Write a query to display data from job_history and make the result set in descending order by the
+epmloyee_id and ascending order by start date.*/
+
+SELECT* 
+FROM HR.job_history
+ORDER BY employee_id DESC, start_date;
+
+/* 8. Write a query to display job_id and salary of employees whose phone number starts with 515 or
+590 and was hired after 2003 by sorting hire_date and salary in ascending way.*/
+
+SELECT job_id, salary
+FROM hr.employees
+WHERE (phone_number LIKE '515%' OR phone_number LIKE '590%') AND 
+        hire_date > '31-DEC-03'
+ORDER BY hire_date, salary;
+
+SELECT job_id,salary, phone_number,hire_date,salary 
+FROM employees
+WHERE substr(phone_number,1,3) in(515,590) AND
+EXTRACT (YEAR FROM hire_date) > 2003 ;
+
+
+/* 9. Write a query to display employees who were hired in 2001.*/
+
+SELECT *
+FROM hr.employees
+WHERE hire_date BETWEEN '01-JAN-01' AND '31-DEC-01';
+
+SELECT *
+FROM hr.employees
+WHERE hire_date LIKE '%-01';
+
+SELECT *
+FROM hr.employees
+WHERE EXTRACT(YEAR FROM hire_date) = 2001;
+
+/* 10. Write a query to display employees’ first and last name who were not hired in 2006 and 2007.*/
+
+SELECT first_name, last_name
+FROM hr.employees
+WHERE hire_date NOT BETWEEN '01-JAN-06' AND '31-DEC-07';
+
+SELECT first_name,last_name FROM hr.employees
+WHERE EXTRACT (YEAR FROM hire_date) NOT IN (2006,2007);
+
+
+/* 11. Write a query to display email, job_id and first name of employees whose hired year was 2007
+or hired month was 1.*/
+
+SELECT email, job_id, first_name
+FROM hr.employees
+WHERE hire_date BETWEEN '01-jan-07'AND '31-DEC-07' OR
+                hire_date LIKE '__-JAN-__';
+
+SELECT first_name, email, job_id  
+FROM hr.employees 
+WHERE EXTRACT (YEAR FROM hire_date)= 2007 or EXTRACT (MONTH FROM hire_date)=1;
+
+/* 12. Write a query to display details of employees who was hired after 2007 or salary is less than
+10000.*/
+SELECT *
+FROM hr.employees
+WHERE hire_date > '01-JAN-07' OR
+        salary < 10000;
