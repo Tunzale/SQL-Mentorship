@@ -1,0 +1,94 @@
+/*1. Return the name of the employee with the lowest salary in department 90.*/
+SELECT first_name || ' ' || last_name, SALARY
+FROM hr.employees
+WHERE salary = (SELECT MIN(salary) FROM hr.employees WHERE department_id = 90);
+
+/*2. Select the department name, employee name, and salary of all employees who work in the human resources or purchasing departments. Compute a rank for each unique salary in both
+departments.*/
+
+SELECT d.department_name as dep, 
+        e.first_name as fname, 
+        e.salary as sal, 
+        dense_rank() over (partition by d.department_id order by salary desc) drn
+FROM hr.employees e
+LEFT JOIN hr.departments d on d.department_id = e.department_id
+WHERE d.department_name ='Purchasing' OR d.department_name ='Human Resources'
+
+
+/*3. Select the 3 employees with minimum salary for department id 50.*/
+
+SELECT tb.*
+FROM
+        (SELECT first_name ||' '|| last_name AS full_name, salary, department_id,
+        rank() over (order by salary) drn
+        FROM hr.employees
+        WHERE department_id = 50) tb
+WHERE TB.drn <=3
+        
+
+/*4. Show first name, last name, salary and previously listed employee’s salary who works in
+“IT_PROG” over hire date.*/
+
+SELECT first_name||' '|| last_name as full_name, salary, 
+        LAG(salary,1,0) OVER (ORDER BY hire_date)
+FROM hr.employees
+WHERE job_id = 'IT_PROG'
+
+/*5. Display details of current job for employees who worked as IT Programmers in the past.*/
+
+/*SELECT tb.emp, tb.dep, tb.job, tb.past
+FROM    (
+        SELECT jh.employee_id emp, jh.department_id dep, e.job_id job,
+         lag(e.job_id,1,0) OVER (ORDER BY e.hire_date) as past
+        FROM hr.job_history jh
+        LEFT JOIN hr.employees e ON e.employee_id=jh.employee_id
+        ) tb
+WHERE past = 'IT_PROG';*/
+
+---SELECT* FROM HR.JOB_HISTORY;
+
+/*
+SELECT *
+FROM(
+        SELECT EMPLOYEE_ID, START_DATE, END_DATE, JOB_ID, DEPARTMENT_ID,
+                DENSE_RANK() OVER (partition by employee_id order by start_date) DRN
+        FROM HR.JOB_HISTORY) tb
+WHERE JOB_ID = 'IT_PROG' AND DRN >1;
+*/
+
+SELECT first_name||' '||last_name,
+       hr.job_history.job_id as prev_job,
+       hr.employees.job_id as curr_job
+FROM hr.job_history
+LEFT JOIN hr.employees on hr.job_history.employee_id=hr.employees.employee_id
+WHERE hr.job_history.job_id='IT_PROG';
+
+
+/*6. Make a copy of the employees table and update the salaries of the employees in the new table
+with the maximum salary in their departments.*/
+
+CREATE TABLE EMP_MAX_SAL AS
+    (SELECT * FROM HR.EMPLOYEES);
+
+UPDATE EMP_MAX_SAL e
+SET E.salary = (SELECT tb.salary 
+                    FROM ( 
+                        SELECT DEPARTMENT_ID DEP, MAX(SALARY) salary 
+                        FROM HR.EMPLOYEES
+                        GROUP BY DEPARTMENT_ID
+                        ) tb
+                    WHERE e.department_id = tb.dep)
+                    
+SELECT * FROM EMP_MAX_SAL;
+                    
+/*7. Make a copy of the employees table and update the salaries of the employees in the new table
+with a 30 percent increase*/
+
+CREATE TABLE employees_new AS
+    (SELECT * FROM HR.EMPLOYEES);
+    
+UPDATE employees_new EN
+SET en.salary = en.salary*1.3;
+
+SELECT e.salary, en.salary FROM hr.employees e
+LEFT JOIN employees_new en USING (employee_id);
